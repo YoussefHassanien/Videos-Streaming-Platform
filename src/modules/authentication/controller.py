@@ -4,7 +4,6 @@ from src.modules.authentication.schemas import UserCreate, LoginResponse, LoginR
 from src.modules.authentication.utils import create_token
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
-from datetime import timedelta
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

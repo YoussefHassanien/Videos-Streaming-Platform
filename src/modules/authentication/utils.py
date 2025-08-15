@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 from src.modules.authentication.schemas import TokenData
 from jose import jwt
 from src.configs.settings import settings
 
-def create_token(data: TokenData, expires_delta: Optional[timedelta] = None) -> str:
+def create_token(data: TokenData) -> str:
     """
     Create a JWT token with expiration time
     
@@ -17,12 +16,8 @@ def create_token(data: TokenData, expires_delta: Optional[timedelta] = None) -> 
     """
     data_copy = data.model_dump()  # Convert Pydantic model to dict
     
-    # Set expiration time
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        # Use default expiration from settings (e.g., 30 minutes)
-        expire = datetime.now(timezone.utc) + timedelta(minutes=getattr(settings, 'access_token_expire_minutes', 30))
+    # Use default expiration from settings (e.g., 120 minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     
     # Add expiration to token payload
     data_copy.update({"exp": expire})

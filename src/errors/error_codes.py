@@ -24,6 +24,9 @@ class ErrorCodes(Enum):
     INVALID_TOKEN = ErrorCode(401, "Invalid Token!")
     USER_NOT_FOUND = ErrorCode(404, "User not found!")
     PERMISSION_NOT_GRANTED = ErrorCode(403, "Permission not granted!")
+
+    # Date validation errors
+    INVALID_DATE_OF_BIRTH = ErrorCode(400, "Date of birth must be between 1960 and current date")
     
     # Server errors
     INTERNAL_SERVER_ERROR = ErrorCode(500, "Internal Server Error")

@@ -1,3 +1,4 @@
+from typing import Callable
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt, ExpiredSignatureError
@@ -5,7 +6,7 @@ from jose import JWTError, jwt, ExpiredSignatureError
 from src.configs.settings import settings
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
-from src.models.user import User, UserRole
+from src.models.user import UserRole
 from src.modules.authentication.schemas import TokenData
 
 security = HTTPBearer()
@@ -24,7 +25,7 @@ async def is_authenticated(
     
     try:
         # Verify the JWT token
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(token, settings.access_token_secret_key, algorithms=[settings.access_token_algorithm])
         
         token_data = TokenData(**payload)
         return token_data
@@ -36,15 +37,24 @@ async def is_authenticated(
     except Exception:
         raise AppError(ErrorCodes.INTERNAL_SERVER_ERROR, "JWT token error")
 
-def is_authorized(role: UserRole, user: User = Depends(is_authenticated)) -> TokenData:
+def is_authorized(required_role: UserRole) -> Callable:
     """
-    Authorization middleware
+    Authorization middleware that returns a dependency function.
     Returns a dependency that checks if the authenticated user has the required role.
+    
+    Args:
+        required_role: The role required to access the endpoint
+        
+    Returns:
+        A dependency function that validates user authorization
     """
-    if not user:
-        raise AppError(ErrorCodes.USER_NOT_FOUND)
+    def role_checker(user: TokenData = Depends(is_authenticated)) -> TokenData:
+        if not user:
+            raise AppError(ErrorCodes.USER_NOT_FOUND)
+        
+        if user.role != required_role.value:  # Compare with role value
+            raise AppError(ErrorCodes.PERMISSION_NOT_GRANTED)
+        
+        return user
     
-    if user.role != role:
-        raise AppError(ErrorCodes.PERMISSION_NOT_GRANTED)
-    
-    return user
+    return role_checker

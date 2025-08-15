@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, validator
 from src.models.user import UserRole
 from datetime import datetime
@@ -23,6 +24,31 @@ class UserCreate(BaseModel):
         if not any(char.isupper() for char in v):
             raise AppError(ErrorCodes.ONE_UPPERCASE_LETTER_REQUIRED)
         return v
+    
+    @validator('date_of_birth')
+    def validate_date_of_birth(cls, v):
+        # Normalize datetime to UTC if it has timezone info, otherwise treat as naive
+        if v.tzinfo is not None:
+            # If timezone-aware, convert to UTC
+            v_normalized = v.replace(tzinfo=None)
+        else:
+            # If timezone-naive, use as is
+            v_normalized = v
+        
+        # Define minimum date (January 1, 1960) - timezone naive
+        min_date = datetime(1960, 1, 1)
+        # Get current date - timezone naive
+        max_date = datetime.now()
+        
+        # Check if date is before 1960
+        if v_normalized < min_date:
+            raise AppError(ErrorCodes.INVALID_DATE_OF_BIRTH, "Date of birth cannot be before 1960")
+        
+        # Check if date is in the future
+        if v_normalized > max_date:
+            raise AppError(ErrorCodes.INVALID_DATE_OF_BIRTH, "Date of birth cannot be in the future")
+        
+        return v
 
 
 class LoginResponse(BaseModel):
@@ -33,6 +59,7 @@ class LoginResponse(BaseModel):
 class TokenData(BaseModel):
     sub: str
     role: str
+    exp: Optional[int] = None  # Expiration timestamp
 
 class UserLogin(BaseModel):
     email: EmailStr

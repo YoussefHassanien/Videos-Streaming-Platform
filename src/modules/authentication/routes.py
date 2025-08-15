@@ -3,9 +3,6 @@ from sqlalchemy.orm import Session
 from src.configs.database import get_db
 from src.modules.authentication.controller import AuthController
 from src.modules.authentication.schemas import UserCreate, LoginResponse, UserLogin, LoginResponse
-from src.errors.app_errors import AppError
-from src.middlewares.authentication import is_authenticated
-from src.models.user import User
 
 router = APIRouter()
 
