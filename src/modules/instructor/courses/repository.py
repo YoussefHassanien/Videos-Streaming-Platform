@@ -4,8 +4,9 @@ from src.models.course import Course
 from src.models.user import User
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
-from .schemas import CreateCourseRequest, LectureUploadRequest
+from .schemas import CreateCourseRequest, CreateCourseResponse, LectureUploadRequest, LectureUploadResponse
 import uuid
+from typing import List, Tuple
 
 
 class CoursesRepository:
@@ -13,12 +14,17 @@ class CoursesRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def find_course_by_id(self, course_id: str) -> CreateCourseResponse:
+        return self.db.query(Course).filter(Course.id == course_id).first()
+
     def create_lecture(
         self,
         video_data: LectureUploadRequest,
         asset_id: str,
+        playback_id: str,
+        url: str,
         duration: float,
-    ) -> Lecture:
+    ) -> LectureUploadResponse:
         """Create a new video lecture record"""
 
         course = self.db.query(Course).filter(
@@ -31,6 +37,8 @@ class CoursesRepository:
                         title=video_data.title,
                         description=video_data.description,
                         asset_id=asset_id,
+                        playback_id=playback_id,
+                        url=url,
                         category=video_data.category,
                         subcategory=video_data.subcategory,
                         duration=duration)
@@ -42,7 +50,7 @@ class CoursesRepository:
         return video
 
     def create_course(self, course_data: CreateCourseRequest,
-                      instructor_id: str) -> Course:
+                      instructor_id: str) -> CreateCourseResponse:
 
         user = self.db.query(User).filter(User.id == instructor_id).first()
 
@@ -61,7 +69,8 @@ class CoursesRepository:
 
         return db_course
 
-    def update_course_data(self, course_id: str, duration: float) -> Course:
+    def update_course_data(self, course_id: str,
+                           duration: float) -> CreateCourseResponse:
         """
         Updates a course's total duration and increments its lectures count.
 

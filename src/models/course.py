@@ -1,24 +1,31 @@
-from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, CheckConstraint, Float, Integer, Boolean
+from sqlalchemy import String, DateTime, ForeignKey, CheckConstraint, Float, Integer, Boolean, Column
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from src.configs.database import Base
+from typing import Optional
 
 
 class Course(Base):
     __tablename__ = "courses"
 
-    id = Column(String(36), primary_key=True, index=True)
-    instructor_id = Column(String(36),
-                           ForeignKey("users.id", ondelete="CASCADE"),
-                           nullable=False,
-                           index=True)
-    title = Column(String(200), nullable=False)
-    description = Column(String(1000), nullable=True)
-    duration = Column(Float, default=0, nullable=True)
-    lectures_count = Column(Integer, default=0, nullable=False)
-    premium = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True)
+    instructor_id: Mapped[str] = mapped_column(String(36),
+                                               ForeignKey("users.id"),
+                                               nullable=False,
+                                               index=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(String(1000), nullable=False)
+    duration: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    lectures_count: Mapped[int] = mapped_column(Integer,
+                                                nullable=False,
+                                                default=0)
+    premium: Mapped[bool] = mapped_column(Boolean,
+                                          nullable=False,
+                                          default=False)
+    created_at: Mapped[Optional[DateTime]] = mapped_column(
+        DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[Optional[DateTime]] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now())
 
     # Reverse relationship - enables courses.instructor access
     instructor = relationship("User", back_populates="courses")
