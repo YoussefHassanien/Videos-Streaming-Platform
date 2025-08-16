@@ -4,10 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.errors.app_errors import AppError
 from src.configs.database import engine, Base
 from src.configs.settings import settings
+from src.configs.limiter import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 # APIs routes
 from src.modules.auth.routes import router as auth_router
 from src.modules.instructor.courses.routes import router as courses_router
+from src.modules.student.subscription.routes import router as subscription_router
 
 # Create FastAPI app
 app = FastAPI(title="Youverse Task APIs",
@@ -15,6 +19,13 @@ app = FastAPI(title="Youverse Task APIs",
               version="1.0.0",
               docs_url="/docs",
               redoc_url="/redoc")
+
+# Add the limiter to the app's state. This makes it accessible in request dependencies.
+app.state.limiter = limiter
+
+# Add a global exception handler for rate limit exceeded errors.
+app.add_exception_handler(RateLimitExceeded,
+                          _rate_limit_exceeded_handler)  # type: ignore
 
 if (settings.environment == 'development'):
 
@@ -45,6 +56,10 @@ async def app_error_handler(request: Request, exc: AppError):
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 
 app.include_router(courses_router, prefix="/api/v1/course", tags=["Courses"])
+
+app.include_router(subscription_router,
+                   prefix="/api/v1/subscribe",
+                   tags=["Subscriptions"])
 
 
 @app.get("/")

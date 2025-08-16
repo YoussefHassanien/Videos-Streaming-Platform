@@ -4,8 +4,8 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from src.modules.instructor.courses.repository import CoursesRepository
 from src.modules.instructor.courses.schemas import (
-    CourseListItemResponse, LectureUploadRequest, CreateCourseRequest, CreateCourseResponse,
-    LectureUploadResponse, BatchLectureUploadRequest,
+    CourseListItemResponse, LectureUploadRequest, CreateCourseRequest,
+    CreateCourseResponse, LectureUploadResponse, BatchLectureUploadRequest,
     BatchLectureUploadResponse, LectureUploadResult, Page)
 from src.modules.instructor.courses.utils import MuxUtils
 from src.errors.app_errors import AppError
@@ -157,10 +157,11 @@ class CoursesController:
                 # This was a successful upload
                 successful_uploads += 1
                 processed_results.append(
-                    LectureUploadResult(success=True,
-                                        lecture=result,
-                                        error=None,
-                                        video_filename=video_filename))
+                    LectureUploadResult(
+                        success=True,
+                        lecture=result,  # type: ignore
+                        error=None,
+                        video_filename=video_filename))
 
         return BatchLectureUploadResponse(
             total_videos=len(videos),
@@ -173,18 +174,17 @@ class CoursesController:
                               size: int) -> Page[CourseListItemResponse]:
         """Gets all courses and formats them into a paginated response."""
         courses, total = self.repository.get_all_courses(page, size)
-        
+
         # Transform Course objects to CourseListItemResponse objects
         course_responses = [
-            CourseListItemResponse(
-                id=course.id,
-                title=course.title,
-                description=course.description,
-                duration=course.duration,
-                lectures_count=course.lectures_count,
-                premium=course.premium,
-                instructor=course.instructor
-            ) for course in courses
+            CourseListItemResponse(id=course.id,
+                                   title=course.title,
+                                   description=course.description,
+                                   duration=course.duration,
+                                   lectures_count=course.lectures_count,
+                                   premium=course.premium,
+                                   instructor=course.instructor)
+            for course in courses
         ]
 
         return Page(items=course_responses,

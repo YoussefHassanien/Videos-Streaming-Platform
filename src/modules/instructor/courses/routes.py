@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, status, Form, Query
+from fastapi import APIRouter, Depends, UploadFile, File, status, Form, Query, Request
 from sqlalchemy.orm import Session
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
@@ -13,6 +13,7 @@ from src.middlewares.auth import Auth
 from src.models.user import UserRole
 from typing import List
 import json
+from src.configs.limiter import limiter
 
 router = APIRouter()
 
@@ -21,13 +22,15 @@ router = APIRouter()
             response_model=Page[CourseListItemResponse],
             summary="Get All Courses (Paginated)",
             description="Fetches a paginated list of all courses.")
+@limiter.limit("50/minute")
 async def get_all_courses(
-        db: Session = Depends(get_db),
-        page: int = Query(1, ge=1, description="Page number to retrieve"),
-        size: int = Query(10,
-                          ge=1,
-                          le=100,
-                          description="Number of courses per page")):
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="Page number to retrieve"),
+    size: int = Query(10,
+                      ge=1,
+                      le=100,
+                      description="Number of courses per page")):
     controller = CoursesController(db)
     return await controller.get_all_courses(page=page, size=size)
 
@@ -37,21 +40,22 @@ async def get_all_courses(
              status_code=status.HTTP_201_CREATED,
              summary="Upload Multiple Lectures",
              description="Upload multiple video lectures to a course in batch")
+@limiter.limit("50/minute")
 async def upload_lectures_batch(
-        lectures_files: List[UploadFile] = File(
-            ...,
-            description=
-            "List of video files to upload (exactly 2 files required)",
-            min_length=2,
-            max_length=2),
-        lectures_data: str = Form(
-            ...,
-            description=
-            "JSON string containing list of 2 LectureUploadRequest objects"),
-        course_id: str = Form(...,
-                              description="Course ID to associate video with"),
-        db: Session = Depends(get_db),
-        current_user: TokenData = Depends(Auth(UserRole.INSTRUCTOR))):
+    request: Request,
+    lectures_files: List[UploadFile] = File(
+        ...,
+        description="List of video files to upload (exactly 2 files required)",
+        min_length=2,
+        max_length=2),
+    lectures_data: str = Form(
+        ...,
+        description=
+        "JSON string containing list of 2 LectureUploadRequest objects"),
+    course_id: str = Form(...,
+                          description="Course ID to associate video with"),
+    db: Session = Depends(get_db),
+    current_user: TokenData = Depends(Auth(UserRole.INSTRUCTOR))):
     """
     Upload exactly 2 lectures to courses in batch.
     
@@ -164,16 +168,18 @@ async def upload_lectures_batch(
     status_code=status.HTTP_201_CREATED,
     summary="Upload Lecture",
     description="Upload a lecture video file with metadata (Instructors only)")
+@limiter.limit("50/minute")
 async def upload_Lecture(
-        course_id: str = Form(...,
-                              description="Course ID to associate video with"),
-        title: str = Form(..., description="Lecture title"),
-        description: str = Form(..., description="Lecture description"),
-        category: str = Form(..., description="Lecture category"),
-        subcategory: str = Form(..., description="Lecture subcategory"),
-        lecture_file: UploadFile = File(..., description="Lecture video file"),
-        db: Session = Depends(get_db),
-        current_user: TokenData = Depends(Auth(UserRole.INSTRUCTOR))):
+    request: Request,
+    course_id: str = Form(...,
+                          description="Course ID to associate video with"),
+    title: str = Form(..., description="Lecture title"),
+    description: str = Form(..., description="Lecture description"),
+    category: str = Form(..., description="Lecture category"),
+    subcategory: str = Form(..., description="Lecture subcategory"),
+    lecture_file: UploadFile = File(..., description="Lecture video file"),
+    db: Session = Depends(get_db),
+    current_user: TokenData = Depends(Auth(UserRole.INSTRUCTOR))):
     """
     Upload a Lecture file with metadata.
 
@@ -204,7 +210,9 @@ async def upload_Lecture(
     status_code=status.HTTP_201_CREATED,
     summary="Create Course",
     description="Create an empty course to be linked with lectures later")
+@limiter.limit("50/minute")
 async def create_course(course_data: CreateCourseRequest,
+                        request: Request,
                         db: Session = Depends(get_db),
                         current_user: TokenData = Depends(
                             Auth(UserRole.INSTRUCTOR))):

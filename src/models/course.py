@@ -2,7 +2,8 @@ from sqlalchemy import String, DateTime, ForeignKey, CheckConstraint, Float, Int
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from src.configs.database import Base
-from typing import Optional
+from typing import Optional, List
+from src.models.subscription import Subscription
 
 
 class Course(Base):
@@ -32,6 +33,10 @@ class Course(Base):
 
     # Reverse relationship - enables courses.lectures access
     lectures = relationship("Lecture", back_populates="course")
+
+    # Reverse relationship - enables course.subscriptions access
+    subscriptions: Mapped[List["Subscription"]] = relationship(
+        back_populates="course")
 
     __table_args__ = (
         CheckConstraint("length(trim(title)) > 0",

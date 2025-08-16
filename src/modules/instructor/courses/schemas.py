@@ -40,6 +40,9 @@ class LectureUploadResponse(BaseModel):
     subcategory: str
     course_id: str
 
+    class Config:
+        from_attributes = True
+
 
 class LectureUploadResult(BaseModel):
     success: bool = Field(
