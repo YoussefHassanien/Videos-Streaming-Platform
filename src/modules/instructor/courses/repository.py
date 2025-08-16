@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from src.models.lecture import Lecture
 from src.models.course import Course
 from src.models.user import User
@@ -16,6 +16,23 @@ class CoursesRepository:
 
     def find_course_by_id(self, course_id: str) -> CreateCourseResponse:
         return self.db.query(Course).filter(Course.id == course_id).first()
+
+    def get_all_courses(self, page: int, size: int) -> tuple[list[Course], int]:
+        """
+        Fetches all courses from the database with pagination.
+        Eager loads instructor details to prevent N+1 queries.
+        """
+        if page < 1:
+            page = 1
+        if size < 1:
+            size = 10
+
+        query = self.db.query(Course).options(joinedload(Course.instructor))
+        total = query.count()
+
+        courses = query.offset((page - 1) * size).limit(size).all()
+
+        return courses, total    
 
     def create_lecture(
         self,

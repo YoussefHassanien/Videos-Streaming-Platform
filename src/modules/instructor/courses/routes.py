@@ -1,15 +1,13 @@
-from fastapi import APIRouter, Depends, UploadFile, File, status, Form
+from fastapi import APIRouter, Depends, UploadFile, File, status, Form, Query
 from sqlalchemy.orm import Session
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
 from src.configs.database import get_db
 from src.modules.instructor.courses.controller import CoursesController
-from src.modules.instructor.courses.schemas import (CreateCourseRequest,
-                                                    CreateCourseResponse,
-                                                    LectureUploadResponse,
-                                                    LectureUploadRequest,
-                                                    BatchLectureUploadRequest,
-                                                    BatchLectureUploadResponse)
+from src.modules.instructor.courses.schemas import (
+    CreateCourseRequest, CreateCourseResponse, LectureUploadResponse,
+    LectureUploadRequest, BatchLectureUploadRequest,
+    BatchLectureUploadResponse, Page, CourseListItemResponse)
 from src.modules.auth.schemas import TokenData
 from src.middlewares.auth import Auth
 from src.models.user import UserRole
@@ -17,6 +15,21 @@ from typing import List
 import json
 
 router = APIRouter()
+
+
+@router.get("/all",
+            response_model=Page[CourseListItemResponse],
+            summary="Get All Courses (Paginated)",
+            description="Fetches a paginated list of all courses.")
+async def get_all_courses(
+        db: Session = Depends(get_db),
+        page: int = Query(1, ge=1, description="Page number to retrieve"),
+        size: int = Query(10,
+                          ge=1,
+                          le=100,
+                          description="Number of courses per page")):
+    controller = CoursesController(db)
+    return await controller.get_all_courses(page=page, size=size)
 
 
 @router.post("/add-lectures-batch",

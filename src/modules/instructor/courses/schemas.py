@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, TypeVar, Generic
 from pydantic import BaseModel, Field
 
 
@@ -79,3 +79,39 @@ class BatchLectureUploadResponse(BaseModel):
         description="A detailed list of results for each video in the batch.")
     course_id: str = Field(...,
                            description="The course ID to which the lectures")
+
+
+class InstructorResponse(BaseModel):
+    """Basic instructor details for course listings."""
+    first_name: str
+    last_name: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+
+class CourseListItemResponse(BaseModel):
+    """Represents a single course in a list response."""
+    id: str
+    title: str
+    description: str
+    duration: float
+    lectures_count: int
+    premium: bool
+    instructor: InstructorResponse
+
+    class Config:
+        from_attributes = True
+
+
+T = TypeVar('T')
+
+
+class Page(BaseModel, Generic[T]):
+    """Generic Pydantic model for paginated responses."""
+    items: List[T]
+    total: int
+    page: int
+    size: int
+    pages: int

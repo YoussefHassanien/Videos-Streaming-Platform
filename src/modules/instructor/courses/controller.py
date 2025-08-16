@@ -1,11 +1,12 @@
 import asyncio
+import math
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from src.modules.instructor.courses.repository import CoursesRepository
 from src.modules.instructor.courses.schemas import (
-    LectureUploadRequest, CreateCourseRequest, CreateCourseResponse,
+    CourseListItemResponse, LectureUploadRequest, CreateCourseRequest, CreateCourseResponse,
     LectureUploadResponse, BatchLectureUploadRequest,
-    BatchLectureUploadResponse, LectureUploadResult)
+    BatchLectureUploadResponse, LectureUploadResult, Page)
 from src.modules.instructor.courses.utils import MuxUtils
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
@@ -167,3 +168,27 @@ class CoursesController:
             failed_uploads=failed_uploads,
             results=processed_results,
             course_id=videos_data.course_id)
+
+    async def get_all_courses(self, page: int,
+                              size: int) -> Page[CourseListItemResponse]:
+        """Gets all courses and formats them into a paginated response."""
+        courses, total = self.repository.get_all_courses(page, size)
+        
+        # Transform Course objects to CourseListItemResponse objects
+        course_responses = [
+            CourseListItemResponse(
+                id=course.id,
+                title=course.title,
+                description=course.description,
+                duration=course.duration,
+                lectures_count=course.lectures_count,
+                premium=course.premium,
+                instructor=course.instructor
+            ) for course in courses
+        ]
+
+        return Page(items=course_responses,
+                    total=total,
+                    page=page,
+                    size=size,
+                    pages=math.ceil(total / size) if size > 0 else 0)

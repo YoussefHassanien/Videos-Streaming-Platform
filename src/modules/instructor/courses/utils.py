@@ -199,7 +199,6 @@ class MuxUtils:
         Returns:
             str: playback URL
         """
-        print(f"Premium value: {premium}")
 
         if not premium:
             return f"https://player.mux.com/{playback_id}"
