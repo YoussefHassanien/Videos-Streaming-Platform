@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from src.modules.authentication.schemas import TokenData
+from src.modules.auth.schemas import TokenData
 from jose import jwt
 from src.configs.settings import settings
 

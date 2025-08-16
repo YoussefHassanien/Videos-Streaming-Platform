@@ -1,22 +1,20 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from src.configs.database import get_db
-from src.modules.authentication.controller import AuthController
-from src.modules.authentication.schemas import UserCreate, LoginResponse, UserLogin, LoginResponse
+from src.modules.auth.controller import AuthController
+from src.modules.auth.schemas import UserCreate, LoginResponse, UserLogin, LoginResponse
 
 router = APIRouter()
+
 
 @router.post(
     "/register",
     response_model=LoginResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create new user account",
-    description="Register a new user with email, password, and personal information"
-)
-async def create_user(
-    user_data: UserCreate,
-    db: Session = Depends(get_db)
-):
+    description=
+    "Register a new user with email, password, and personal information")
+async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user account
     
@@ -31,19 +29,15 @@ async def create_user(
     Returns the created user information (without password)
     """
     controller = AuthController(db)
-    return controller.create_user(user_data)
+    return await controller.create_user(user_data)
 
-@router.post(
-    "/login",
-    response_model=LoginResponse,
-    status_code=status.HTTP_200_OK,
-    summary="User login",
-    description="Authenticate user and return access token"
-)
-async def login_user(
-    login_data: UserLogin,
-    db: Session = Depends(get_db)
-):
+
+@router.post("/login",
+             response_model=LoginResponse,
+             status_code=status.HTTP_200_OK,
+             summary="User login",
+             description="Authenticate user and return access token")
+async def login_user(login_data: UserLogin, db: Session = Depends(get_db)):
     """
     Authenticate user and return access token
     
@@ -53,4 +47,5 @@ async def login_user(
     Returns access token and user information
     """
     controller = AuthController(db)
-    return controller.authenticate_user(login_data.email, login_data.password)
+    return await controller.authenticate_user(login_data.email,
+                                              login_data.password)

@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
     # Database Configuration
     database_url: str
@@ -7,12 +8,16 @@ class Settings(BaseSettings):
     # JWT Configuration
     access_token_secret_key: str
     access_token_expire_minutes: int
-    access_token_algorithm: str 
+    access_token_algorithm: str
 
     # MUX Configuration
-    mux_secret_key: str
-    mux_access_token: str
-    
+    mux_token_id: str
+    mux_token_secret: str
+    mux_signing_key_id: str
+    mux_private_key: str
+
+    max_video_size: int = 500 * 1024 * 1024
+
     # Server Configuration
     host: str = "127.0.0.1"
     port: int = 8000
@@ -20,9 +25,10 @@ class Settings(BaseSettings):
 
     # Environment Configuration
     environment: str = 'development'
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = False
+
 
 settings = Settings()

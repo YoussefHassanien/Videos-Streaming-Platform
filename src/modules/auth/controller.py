@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from src.modules.authentication.repository import AuthRepository
-from src.modules.authentication.schemas import UserCreate, LoginResponse, LoginResponse, TokenData
-from src.modules.authentication.utils import create_token
+from src.modules.auth.repository import AuthRepository
+from src.modules.auth.schemas import UserCreate, LoginResponse, LoginResponse, TokenData
+from src.modules.auth.utils import create_token
 from src.errors.app_errors import AppError
 from src.errors.error_codes import ErrorCodes
 from passlib.context import CryptContext
@@ -12,7 +12,7 @@ class AuthController:
     def __init__(self, db: Session):
         self.repository = AuthRepository(db)
     
-    def create_user(self, user_data: UserCreate) -> LoginResponse:
+    async def create_user(self, user_data: UserCreate) -> LoginResponse:
         """
         Create a new user account
         
@@ -49,7 +49,7 @@ class AuthController:
             # Handle unexpected errors
             raise AppError(ErrorCodes.INTERNAL_SERVER_ERROR, f"Unexpected error during user creation: {str(e)}")
     
-    def authenticate_user(self, email: str, password: str) -> LoginResponse:
+    async def authenticate_user(self, email: str, password: str) -> LoginResponse:
         """
         Authenticate user and return login response with token
         
@@ -63,11 +63,11 @@ class AuthController:
         # Get user by email
         user = self.repository.get_user_by_email(email)
         if not user:
-            raise AppError(ErrorCodes.INVALID_PASSWORD, "Invalid email or password")
+            raise AppError(ErrorCodes.BAD_REQUEST, "Invalid email or password")
         
         # Verify password
         if not pwd_context.verify(password, user.password):
-            raise AppError(ErrorCodes.INVALID_PASSWORD, "Invalid email or password")
+            raise AppError(ErrorCodes.BAD_REQUEST, "Invalid email or password")
         
         # Create token data
         token_data = TokenData(

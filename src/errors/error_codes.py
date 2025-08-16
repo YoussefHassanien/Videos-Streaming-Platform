@@ -9,27 +9,13 @@ class ErrorCode:
         return f"ErrorCode(status={self.status}, message='{self.message}')"
 
 class ErrorCodes(Enum):
-    # User creation errors
-    USER_ALREADY_EXISTS = ErrorCode(400, "This user is already registered")
-
-    # Passowrd validation errors
-    TOO_SHORT_PASSWORD = ErrorCode(400, "Password must be at least 8 characters")
-    ONE_DIGIT_REQUIRED = ErrorCode(400, "Password must contain at least one digit")
-    ONE_UPPERCASE_LETTER_REQUIRED = ErrorCode(400, "Password must contain at least one uppercase letter")
-    
-    # Authentication and authorization errors
+    BAD_REQUEST = ErrorCode(400, "One or more of the sent fields is invalid")
     UNAUTHORIZED = ErrorCode(401, "Unauthorized!")
-    NO_TOKEN = ErrorCode(400, "No Token Provided!")
-    EXPIRED_TOKEN = ErrorCode(401, "Token Expired!")
-    INVALID_TOKEN = ErrorCode(401, "Invalid Token!")
-    USER_NOT_FOUND = ErrorCode(404, "User not found!")
     PERMISSION_NOT_GRANTED = ErrorCode(403, "Permission not granted!")
-
-    # Date validation errors
-    INVALID_DATE_OF_BIRTH = ErrorCode(400, "Date of birth must be between 1960 and current date")
-    
-    # Server errors
+    NOT_FOUND = ErrorCode(404, "Not found!")
+    UPLOAD_TIMEOUT = ErrorCode(408, "Upload processing timeout")
     INTERNAL_SERVER_ERROR = ErrorCode(500, "Internal Server Error")
+    EXTERNAL_SERVICE_ERROR = ErrorCode(503, "External service error")
 
 # Create a convenience instance for easy access
 error_codes = ErrorCodes
